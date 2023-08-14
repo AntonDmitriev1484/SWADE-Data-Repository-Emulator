@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  s3:
+    container_name: s3
+    image: scireum/s3-ninja
+    ports:
+      - 9444:9000 #maps port 9444 on localhost to 9000 on S3 instance, for accessing UI at localhost
+    networks:
+      - swade-net
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/S3data/:/home/sirius/data/
+      # I think this is what the site means but I'm not 100% sure
+      # Also note what it says about changing user group for the mounted file
+  
+networks:
+  swade-net:
+    driver: bridge

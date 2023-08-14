@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  pg:
+    container_name: pg
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432 # 5432 is the default port for postgres, map this to localhost:5432
+    environment:
+      POSTGRES_PASSWORD: pass # Sets the password for sudo
+    networks:
+      - swade-net
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d
+    # Need to bind a volume from local OS that has init scripts
+  
+  e-srv:
+    container_name: e-srv
+    image: e-srv
+    networks:
+      - swade-net
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    # This sets up the postgres admin gui
+
+networks:
+  swade-net:
+    driver: bridge

@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  cloud-srv:
+    container_name: c-srv
+    image: c-srv
+    networks:
+    - swade-net
+        
+networks:
+  swade-net:
+    driver: bridge

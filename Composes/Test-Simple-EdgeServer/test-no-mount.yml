@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  cloud-srv:
+      container_name: cloud-srv
+      image: cloud-srv-1
+      networks:
+        - edge-test
+
+  edge-srv:
+    container_name: edge-srv
+    image: edge-srv-1
+    networks:
+      - edge-test
+
+networks:
+  edge-test:
+    driver: bridge

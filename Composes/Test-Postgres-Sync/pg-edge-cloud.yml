@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  pg:
+    container_name: pg
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432 # 5432 is the default port for postgres, map this to localhost:5432
+    environment:
+      POSTGRES_PASSWORD: pass # Sets the password for sudo
+    networks:
+      - swade-net
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d     
+      # Need to bind init scripts as a volume
+      - postgres_data:/var/lib/postgresql/data
+      # - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PGdata/e-srv/:/var/lib/postgresql/data
+      # Temporary storage volume 'postgres_data' defined later in this file
+  
+  e-srv:
+    container_name: e-srv
+    image: e-srv
+    environment:
+      CLOUD_IP: ${E-SRV_IP}
+    networks:
+      - swade-net
+
+  c-srv:
+    container_name: c-srv
+    image: c-srv
+    environment:
+      CLOUD_IP: ur
+    ports:
+      - 3000:3000
+    networks:
+      - swade-net
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    # This sets up the postgres admin gui
+
+networks:
+  swade-net:
+    driver: bridge
+
+volumes:
+  postgres_data:   # Creating a named tmpfs volume specifically for the PostgreSQL data directory
+    driver: local  # Use the local driver for named volumes
+    driver_opts:
+      type: tmpfs   # Use the tmpfs driver for the volume
+      device: tmpfs # Specify the device as tmpfs

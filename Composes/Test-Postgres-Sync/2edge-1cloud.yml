@@ -1,0 +1,128 @@
+version: "3.8"
+
+services:
+
+  # Postgres DB + Edge Server #1
+  pg1:
+    container_name: pg1
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: pass
+    networks:
+      edge-net1:
+        aliases:
+          - pg
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d
+      - pg1_data:/var/lib/postgresql/data
+  
+  # Edge server
+  # For some reason e-srv1 can't resolve c-srv, but e-srv2 can
+  e-srv1:
+    container_name: e-srv1
+    image: e-srv
+    environment:
+      EDGE_ID: 1
+    networks:
+      swade-net:
+        aliases:
+          - e-srv1
+      edge-net1:
+        aliases:
+          - e-srv
+
+  # Postgres DB + Edge Server #2
+  pg2:
+    container_name: pg2
+    image: postgres
+    restart: always
+    ports:
+      - 5433:5432 # can't have multiple postgres containers mapping to the same localhost:5432
+    environment:
+      POSTGRES_PASSWORD: pass
+    networks:
+      edge-net2:
+        aliases:
+          - pg
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d
+      - pg2_data:/var/lib/postgresql/data
+  
+  # Edge server
+  e-srv2:
+    container_name: e-srv2
+    image: e-srv
+    environment:
+      EDGE_ID: 2
+    networks:
+      swade-net:
+        aliases:
+          - e-srv2
+      edge-net2:
+        aliases:
+          - e-srv
+
+
+  # Postgres instance for the cloud server
+  cpg:
+      container_name: cpg
+      image: postgres
+      restart: always
+      ports:
+        - 5434:5432 # 5432 is the default port for postgres, map this to localhost:5433
+      environment:
+        POSTGRES_PASSWORD: pass # Sets the password for sudo
+      networks:
+        - repo-net
+      volumes:
+        - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d     
+        # Need to bind init scripts as a volume
+        - cpg_data:/var/lib/postgresql/data
+        # Note: This will bind to the same temp volume as the edge for now
+
+  # Cloud server
+  c-srv:
+    container_name: c-srv
+    image: c-srv
+    ports:
+      - 3000:3000
+    networks:
+      swade-net:
+        aliases:
+          - c-srv
+      repo-net:
+        aliases:
+          - c-srv
+
+networks:
+  swade-net:
+    driver: bridge
+  edge-net1:
+    driver: bridge
+  edge-net2:
+    driver: bridge
+  repo-net:
+    driver: bridge
+
+volumes:
+  pg1_data:   # Creating a named tmpfs volume specifically for the PostgreSQL data directory
+    driver: local  # Use the local driver for named volumes
+    driver_opts:
+      type: tmpfs   # Use the tmpfs driver for the volume
+      device: tmpfs # Specify the device as tmpfs
+  pg2_data:   # Creating a named tmpfs volume specifically for the PostgreSQL data directory
+    driver: local  # Use the local driver for named volumes
+    driver_opts:
+      type: tmpfs   # Use the tmpfs driver for the volume
+      device: tmpfs # Specify the device as tmpfs
+  cpg_data:   # Creating a named tmpfs volume specifically for the PostgreSQL data directory
+      driver: local  # Use the local driver for named volumes
+      driver_opts:
+        type: tmpfs   # Use the tmpfs driver for the volume
+        device: tmpfs # Specify the device as tmpfs
+
+# yeah it seems I'll have to manually number the edge-nets, e-srv alias in swade-net, and postgres instances
+# maybe write a script that automates building this docker-compose?

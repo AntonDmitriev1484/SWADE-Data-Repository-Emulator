@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  c-srv:
+    container_name: c-srv
+    image: c-srv
+    networks:
+      - swade-net
+
+  e-srv:
+    container_name: e-srv
+    image: e-srv
+    networks:
+      - swade-net
+
+networks:
+  swade-net:
+    driver: bridge

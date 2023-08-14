@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  cloud-srv:
+      container_name: cloud-srv
+      image: cloud-srv-1
+      networks:
+        - edge-test
+
+  edge-srv:
+    container_name: edge-srv
+    image: edge-srv-1
+    networks:
+      - edge-test
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/SWADE-Sim-DataSets/Test/Test-Simple-EdgeServer:/app/data
+      # Ok, it mounted all the files in Test-Simple-EdgeServer to /app/data, but note: they don't actually appear on docker desktop
+
+networks:
+  edge-test:
+    driver: bridge

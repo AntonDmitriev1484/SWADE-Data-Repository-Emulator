@@ -1,0 +1,121 @@
+version: "3.8"
+
+services:
+
+  # Postgres DB + Edge Server #1
+  pg1:
+    container_name: pg1
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5431
+    environment:
+      POSTGRES_PASSWORD: pass
+      EDGE_ID: 1
+    networks:
+      swade-net:
+        ipv4_address: 172.31.0.7 # 0.1 is always in use for some reason
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d
+      - pg1_data:/var/lib/postgresql/data
+
+  e-srv1:
+    container_name: e-srv1
+    image: e-srv
+    environment:
+      EDGE_ID: 1
+      USERNAME: u1
+      LOCAL_GROUP: A
+      TEST_FILE: MAC000002.csv
+    networks:
+      swade-net:
+        ipv4_address: 172.31.0.2
+
+  # Postgres DB + Edge Server #2
+  pg2:
+    container_name: pg2
+    image: postgres
+    restart: always
+    ports:
+      - 5433:5431 # can't have multiple postgres containers mapping to the same localhost:5431
+    environment:
+      POSTGRES_PASSWORD: pass
+      EDGE_ID: 2
+    networks:
+      swade-net:
+        ipv4_address: 172.31.0.3
+    volumes:
+      - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d
+      - pg2_data:/var/lib/postgresql/data
+  
+  # Edge server
+  e-srv2:
+    container_name: e-srv2
+    image: e-srv
+    environment:
+      EDGE_ID: 2
+      USERNAME: u2
+      LOCAL_GROUP: B
+      TEST_FILE: MAC000004.csv
+    networks:
+      swade-net:
+        ipv4_address: 172.31.0.4
+
+  # Postgres instance for the cloud server
+  cpg:
+      container_name: cpg
+      image: postgres
+      restart: always
+      ports:
+        - 5434:5431 # 5431 is the default port for postgres, map this to localhost:5433
+      environment:
+        POSTGRES_PASSWORD: pass # Sets the password for sudo
+      networks:
+        swade-net:
+          ipv4_address: 172.31.0.5
+      volumes:
+        - /c/Users/soula/OneDrive/Desktop/Programming/IoT-SITY/PostGRES-Scripts/:/docker-entrypoint-initdb.d
+        - cpg_data:/var/lib/postgresql/data
+
+  # FileSystem for the cloud server
+  fs:
+    container_name: fs
+    image: fs
+    networks:
+      swade-net:
+        ipv4_address: 172.31.0.8
+
+  # Cloud server
+  c-srv:
+    container_name: c-srv
+    image: c-srv
+    networks:
+      swade-net:
+        ipv4_address: 172.31.0.6
+
+networks:
+  swade-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.31.0.0/16
+        # /16 means 65536 allowed, /28 means 16 addresses allowed, /24 means 256 allowed
+        # https://unix.stackexchange.com/questions/561751/what-does-this-mean-16-after-an-ip-address#:~:text=An%20%2F16%20is%20usually%20used,0.0%20up%20to%201.2.
+        # https://www.calculator.net/ip-subnet-calculator.html?cclass=any&csubnet=16&cip=172.31.0.6&ctype=ipv4&printit=0&x=41&y=17
+
+volumes:
+  pg1_data:   # Creating a named tmpfs volume specifically for the PostgreSQL data directory
+    driver: local  # Use the local driver for named volumes
+    driver_opts:
+      type: tmpfs   # Use the tmpfs driver for the volume
+      device: tmpfs # Specify the device as tmpfs
+  pg2_data:   # Creating a named tmpfs volume specifically for the PostgreSQL data directory
+    driver: local  # Use the local driver for named volumes
+    driver_opts:
+      type: tmpfs   # Use the tmpfs driver for the volume
+      device: tmpfs # Specify the device as tmpfs
+  cpg_data:   # Creating a named tmpfs volume specifically for the PostgreSQL data directory
+      driver: local  # Use the local driver for named volumes
+      driver_opts:
+        type: tmpfs   # Use the tmpfs driver for the volume
+        device: tmpfs # Specify the device as tmpfs
